@@ -52,12 +52,14 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
 )
 
+// 服务运行选项
 type ServerRunOptions struct {
+	// Config文件
 	ConfigFile              string
 	GenericServerRunOptions *genericoptions.ServerRunOptions
 	*apiserverconfig.Config
 
-	//
+	// Debug模式
 	DebugMode bool
 }
 

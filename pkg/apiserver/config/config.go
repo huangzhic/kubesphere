@@ -50,35 +50,33 @@ import (
 	"kubesphere.io/kubesphere/pkg/simple/client/sonarqube"
 )
 
-// Package config saves configuration for running KubeSphere components
+// Package config保存运行KubeSphere组件的配置
 //
-// Config can be configured from command line flags and configuration file.
-// Command line flags hold higher priority than configuration file. But if
-// component Endpoint/Host/APIServer was left empty, all of that component
-// command line flags will be ignored, use configuration file instead.
-// For example, we have configuration file
+// Config 可以来自于命令行flags和配置文件
+// 命令行flags优先级高于配置文件
+// 但如果组件的Endpoint/Host/APIServer 为空,
+// 那个组件的所有命令行flags将被忽视，转而使用配置文件。
+// 例如，我们有一个配置文件
 //
 // mysql:
 //   host: mysql.kubesphere-system.svc
 //   username: root
 //   password: password
 //
-// At the same time, have command line flags like following:
+// 同时，具有如下命令行标志：
 //
 // --mysql-host mysql.openpitrix-system.svc --mysql-username king --mysql-password 1234
 //
-// We will use `king:1234@mysql.openpitrix-system.svc` from command line flags rather
-// than `root:password@mysql.kubesphere-system.svc` from configuration file,
-// cause command line has higher priority. But if command line flags like following:
+//我们将使用 `king:1234@mysql.openpitrix-system.svc` 来自命令行标志
+// 但如果命令行flags如下:
 //
 // --mysql-username root --mysql-password password
 //
-// we will `root:password@mysql.kubesphere-system.svc` as input, cause
-// mysql-host is missing in command line flags, all other mysql command line flags
-// will be ignored.
+// 我们将使用`root:password@mysql.kubesphere-system.svc` as input,
+// 因为命令行flags中缺少mysql-host，该命令行的所有其他flags将被忽略。
 
 const (
-	// DefaultConfigurationName is the default name of configuration
+	// 默认配置名
 	defaultConfigurationName = "kubesphere"
 
 	// DefaultConfigurationPath the default location of the configuration file

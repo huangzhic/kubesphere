@@ -36,7 +36,7 @@ import (
 func NewAPIServerCommand() *cobra.Command {
 	s := options.NewServerRunOptions()
 
-	// Load configuration from file
+	// 从文件中读取配置
 	conf, err := apiserverconfig.TryLoadFromDisk()
 	if err == nil {
 		s = &options.ServerRunOptions{

@@ -26,24 +26,24 @@ import (
 )
 
 type ServerRunOptions struct {
-	// server bind address
+	// 服务绑定的地址
 	BindAddress string
 
-	// insecure port number
+	// 不安全的端口号
 	InsecurePort int
 
-	// secure port number
+	// 安全端口号
 	SecurePort int
 
-	// tls cert file
+	// TLS证书文件
 	TlsCertFile string
 
-	// tls private key file
+	// TLS密钥文件
 	TlsPrivateKey string
 }
 
 func NewServerRunOptions() *ServerRunOptions {
-	// create default server run options
+	// 创建默认的服务运行选项
 	s := ServerRunOptions{
 		BindAddress:   "0.0.0.0",
 		InsecurePort:  9090,

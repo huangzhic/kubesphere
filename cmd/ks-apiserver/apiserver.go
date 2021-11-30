@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-
+	// 创建一个command
 	cmd := app.NewAPIServerCommand()
 
 	if err := cmd.Execute(); err != nil {
