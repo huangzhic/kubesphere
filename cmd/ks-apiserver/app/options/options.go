@@ -55,8 +55,10 @@ import (
 // 服务运行选项
 type ServerRunOptions struct {
 	// Config文件
-	ConfigFile              string
+	ConfigFile string
+	// 通用服务运行选项
 	GenericServerRunOptions *genericoptions.ServerRunOptions
+	// 定义apiserver处理外部服务所需的一切
 	*apiserverconfig.Config
 
 	// Debug模式
@@ -106,18 +108,20 @@ func (s *ServerRunOptions) Flags() (fss cliflag.NamedFlagSets) {
 
 const fakeInterface string = "FAKE"
 
-// NewAPIServer creates an APIServer instance using given options
+// NewAPIServer 使用给定选项创建APIServer实例
 func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIServer, error) {
 	apiServer := &apiserver.APIServer{
 		Config: s.Config,
 	}
 
+	// k8s客户端
 	kubernetesClient, err := k8s.NewKubernetesClient(s.KubernetesOptions)
 	if err != nil {
 		return nil, err
 	}
 	apiServer.KubernetesClient = kubernetesClient
 
+	// informerFactory
 	informerFactory := informers.NewInformerFactories(kubernetesClient.Kubernetes(), kubernetesClient.KubeSphere(),
 		kubernetesClient.Istio(), kubernetesClient.Snapshot(), kubernetesClient.ApiExtensions(), kubernetesClient.Prometheus())
 	apiServer.InformerFactory = informerFactory
@@ -125,15 +129,17 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 	if s.MonitoringOptions == nil || len(s.MonitoringOptions.Endpoint) == 0 {
 		return nil, fmt.Errorf("moinitoring service address in configuration MUST not be empty, please check configmap/kubesphere-config in kubesphere-system namespace")
 	} else {
+		// prometheus客户端
 		monitoringClient, err := prometheus.NewPrometheus(s.MonitoringOptions)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to prometheus, please check prometheus status, error: %v", err)
 		}
 		apiServer.MonitoringClient = monitoringClient
 	}
-
+	// metricsserver客户端
 	apiServer.MetricsClient = metricsserver.NewMetricsClient(kubernetesClient.Kubernetes(), s.KubernetesOptions)
 
+	// es客户端
 	if s.LoggingOptions.Host != "" {
 		loggingClient, err := esclient.NewClient(s.LoggingOptions)
 		if err != nil {
@@ -142,6 +148,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.LoggingClient = loggingClient
 	}
 
+	// s3客户端
 	if s.S3Options.Endpoint != "" {
 		if s.S3Options.Endpoint == fakeInterface && s.DebugMode {
 			apiServer.S3Client = fakes3.NewFakeS3()
@@ -154,6 +161,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		}
 	}
 
+	// jenkins客户端
 	if s.DevopsOptions.Host != "" {
 		devopsClient, err := jenkins.NewDevopsClient(s.DevopsOptions)
 		if err != nil {
@@ -162,6 +170,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.DevopsClient = devopsClient
 	}
 
+	// sonarqube客户端
 	if s.SonarQubeOptions.Host != "" {
 		sonarClient, err := sonarqube.NewSonarQubeClient(s.SonarQubeOptions)
 		if err != nil {
@@ -170,6 +179,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.SonarClient = sonarqube.NewSonar(sonarClient.SonarQube())
 	}
 
+	// redis客户端
 	var cacheClient cache.Interface
 	if s.RedisOptions != nil && len(s.RedisOptions.Host) != 0 {
 		if s.RedisOptions.Host == fakeInterface && s.DebugMode {
@@ -187,6 +197,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.CacheClient = cache.NewSimpleCache()
 	}
 
+	// events客户端
 	if s.EventsOptions.Host != "" {
 		eventsClient, err := eventsclient.NewClient(s.EventsOptions)
 		if err != nil {
@@ -195,6 +206,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.EventsClient = eventsClient
 	}
 
+	// auditing客户端
 	if s.AuditingOptions.Host != "" {
 		auditingClient, err := auditingclient.NewClient(s.AuditingOptions)
 		if err != nil {
@@ -203,6 +215,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		apiServer.AuditingClient = auditingClient
 	}
 
+	// alerting客户端
 	if s.AlertingOptions != nil && (s.AlertingOptions.PrometheusEndpoint != "" || s.AlertingOptions.ThanosRulerEndpoint != "") {
 		alertingClient, err := alerting.NewRuleClient(s.AlertingOptions)
 		if err != nil {
@@ -215,6 +228,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		Addr: fmt.Sprintf(":%d", s.GenericServerRunOptions.InsecurePort),
 	}
 
+	//https
 	if s.GenericServerRunOptions.SecurePort != 0 {
 		certificate, err := tls.LoadX509KeyPair(s.GenericServerRunOptions.TlsCertFile, s.GenericServerRunOptions.TlsPrivateKey)
 		if err != nil {
@@ -237,6 +251,7 @@ func (s *ServerRunOptions) NewAPIServer(stopCh <-chan struct{}) (*apiserver.APIS
 		klog.Fatalf("unable to create controller runtime cache: %v", err)
 	}
 
+	//controller-runtime client
 	apiServer.RuntimeClient, err = runtimeclient.New(apiServer.KubernetesClient.Config(), runtimeclient.Options{Scheme: sch})
 	if err != nil {
 		klog.Fatalf("unable to create controller runtime client: %v", err)

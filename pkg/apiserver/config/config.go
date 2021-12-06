@@ -79,11 +79,11 @@ const (
 	// 默认配置名
 	defaultConfigurationName = "kubesphere"
 
-	// DefaultConfigurationPath the default location of the configuration file
+	// 默认配置路径
 	defaultConfigurationPath = "/etc/kubesphere"
 )
 
-// Config defines everything needed for apiserver to deal with external services
+// Config 定义apiserver处理外部服务所需的一切
 type Config struct {
 	DevopsOptions         *jenkins.Options        `json:"devops,omitempty" yaml:"devops,omitempty" mapstructure:"devops"`
 	SonarQubeOptions      *sonarqube.Options      `json:"sonarqube,omitempty" yaml:"sonarQube,omitempty" mapstructure:"sonarqube"`
@@ -109,7 +109,7 @@ type Config struct {
 	GPUOptions            *gpu.Options            `json:"gpu,omitempty" yaml:"gpu,omitempty" mapstructure:"gpu"`
 }
 
-// newConfig creates a default non-empty Config
+// 创建一个默认非空Config
 func New() *Config {
 	return &Config{
 		DevopsOptions:         jenkins.NewDevopsOptions(),
@@ -137,24 +137,31 @@ func New() *Config {
 	}
 }
 
-// TryLoadFromDisk loads configuration from default location after server startup
-// return nil error if configuration file not exists
+// TryLoadFromDisk 服务器启动后从默认路径加载配置
+// return nil error 如果配置文件不存在
 func TryLoadFromDisk() (*Config, error) {
+	// 配置文件的名字
 	viper.SetConfigName(defaultConfigurationName)
+	// 配置文件路径
 	viper.AddConfigPath(defaultConfigurationPath)
 
-	// Load from current working directory, only used for debugging
+	// 添加多个配置文件路径
+	// 从当前工作目录加载配置文件，仅用于debug时使用
 	viper.AddConfigPath(".")
 
-	// Load from Environment variables
+	// 从环境变量中读取
 	viper.SetEnvPrefix("kubesphere")
+	// 开启读取环境变量
 	viper.AutomaticEnv()
+	// 将环境变量中的.替换成_
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// 如果配置文件没找到
 			return nil, err
 		} else {
+			// 如果配置文件找到了但发生了其他错误
 			return nil, fmt.Errorf("error parsing configuration file %s", err)
 		}
 	}

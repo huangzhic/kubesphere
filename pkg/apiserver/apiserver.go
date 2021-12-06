@@ -112,7 +112,7 @@ import (
 )
 
 type APIServer struct {
-	// number of kubesphere apiserver
+	// Server数量
 	ServerCount int
 
 	Server *http.Server
@@ -129,7 +129,7 @@ type APIServer struct {
 	// mainly for fast query
 	InformerFactory informers.InformerFactory
 
-	// cache is used for short lived objects, like session
+	// cache 用于短生命周期对象,例如 session
 	CacheClient cache.Interface
 
 	// monitoring client set

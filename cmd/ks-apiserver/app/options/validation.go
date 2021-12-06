@@ -16,8 +16,7 @@ limitations under the License.
 
 package options
 
-// Validate validates server run options, to find
-// options' misconfiguration
+// Validate 验证服务器运行选项,以查找错误配置
 func (s *ServerRunOptions) Validate() []error {
 	var errors []error
 

@@ -47,34 +47,45 @@ func NewAPIServerCommand() *cobra.Command {
 		klog.Fatal("Failed to load configuration from disk", err)
 	}
 
+	//创建一个command
 	cmd := &cobra.Command{
+		//使用信息
 		Use: "ks-apiserver",
+		//长描述
 		Long: `The KubeSphere API server validates and configures data for the API objects. 
 The API Server services REST operations and provides the frontend to the
 cluster's shared state through which all other components interact.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if errs := s.Validate(); len(errs) != 0 {
+				//聚合错误
 				return utilerrors.NewAggregate(errs)
 			}
 
 			return Run(s, signals.SetupSignalHandler())
 		},
+		//当发生错误时静默使用
 		SilenceUsage: true,
 	}
 
+	// 得到cmd的*Flagset
 	fs := cmd.Flags()
+	// 得到NamedFlagSets
 	namedFlagSets := s.Flags()
 	for _, f := range namedFlagSets.FlagSets {
+		//全部加到fs中
 		fs.AddFlagSet(f)
 	}
 
 	usageFmt := "Usage:\n  %s\n"
+	// 返回用户终端的宽度和高度
 	cols, _, _ := term.TerminalSize(cmd.OutOrStdout())
+	// 自定义帮助选项
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(cmd.OutOrStdout(), "%s\n\n"+usageFmt, cmd.Long, cmd.UseLine())
 		cliflag.PrintSections(cmd.OutOrStdout(), namedFlagSets, cols)
 	})
 
+	//创建version command
 	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version of KubeSphere ks-apiserver",
@@ -89,7 +100,7 @@ cluster's shared state through which all other components interact.`,
 }
 
 func Run(s *options.ServerRunOptions, ctx context.Context) error {
-
+	//得到api server
 	apiserver, err := s.NewAPIServer(ctx.Done())
 	if err != nil {
 		return err
